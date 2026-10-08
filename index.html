@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SLAM Prep Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: summary header → pose-graph timeline of 14 weeks → month cards → per-week checklists. */
+:root {
+  --bg: #f4f6f8; --surface: #ffffff; --sunken: #e9edf1; --line: #d3dae1;
+  --fg: #16202a; --muted: #5a6876; --accent: #0f6e8c; --accent-soft: #d6ebf2;
+  --read: #4f5bd5; --build: #0f8a7a; --design: #c27a12; --code: #8a4fc9; --career: #c2456b;
+  --good: #1d8a4e; --warn: #b8660b; --bad: #c0392b;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f151b; --surface: #161e26; --sunken: #1d2731; --line: #2b3743;
+  --fg: #e3e9ef; --muted: #93a2b1; --accent: #4fb6d6; --accent-soft: #163847;
+  --read: #8f98f5; --build: #3cc2ae; --design: #e3a548; --code: #b48af0; --career: #ec7a9c;
+  --good: #4cc27f; --warn: #e3a548; --bad: #ef6f61; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f151b; --surface: #161e26; --sunken: #1d2731; --line: #2b3743;
+  --fg: #e3e9ef; --muted: #93a2b1; --accent: #4fb6d6; --accent-soft: #163847;
+  --read: #8f98f5; --build: #3cc2ae; --design: #e3a548; --code: #b48af0; --career: #ec7a9c;
+  --good: #4cc27f; --warn: #e3a548; --bad: #ef6f61; color-scheme: dark }
+
+* { box-sizing: border-box }
+html { color-scheme: light }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.5 }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 28px 20px 64px; display: grid; gap: 28px }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: .01em }
+h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 700; line-height: 1.05 }
+h2 { font-size: 20px; font-weight: 600 }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted) }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums }
+.muted { color: var(--muted) }
+
+header { display: grid; gap: 10px }
+.headrow { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px }
+.status { font-family: var(--f-mono); font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px }
+.status { flex-wrap: wrap; gap: 8px }
+.tbtn { font: 500 12px var(--f-mono); padding: 5px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--fg); cursor: pointer }
+.tbtn:hover { border-color: var(--accent); color: var(--accent) }
+.tbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px }
+.now { font-size: 16px; max-width: 70ch }
+.now strong { color: var(--accent) }
+
+.stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden }
+.stat { background: var(--surface); padding: 14px 16px; display: grid; gap: 2px; min-width: 0 }
+.stat .v { font-family: var(--f-mono); font-size: 26px; font-weight: 500; font-variant-numeric: tabular-nums }
+.stat .v small { font-size: 14px; color: var(--muted) }
+.stat .l { font-size: 13px; color: var(--muted) }
+.pace { font-size: 13px; font-weight: 600 }
+.pace.good { color: var(--good) } .pace.warn { color: var(--warn) } .pace.bad { color: var(--bad) }
+@media (max-width: 760px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)) } .stat:first-child { grid-column: 1 / -1 } }
+
+.graph-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 0 10px; display: grid; gap: 6px }
+.graph-card .cap { padding: 0 18px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px }
+.graph-scroll { overflow-x: auto }
+#graph { display: block; min-width: 760px; width: 100%; height: auto }
+#graph text { font-family: var(--f-mono); fill: var(--muted) }
+#graph .wk { font-size: 13px; fill: var(--fg); font-weight: 500 }
+#graph a { cursor: pointer }
+#graph a:focus-visible circle.base { stroke: var(--accent); stroke-width: 3 }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted) }
+.legend span { display: inline-flex; align-items: center; gap: 6px }
+.sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block }
+
+.months { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px }
+@media (max-width: 860px) { .months { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+@media (max-width: 480px) { .months { grid-template-columns: minmax(0, 1fr) } }
+.month { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; align-content: start; min-width: 0 }
+.month.cur { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) }
+.month .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px }
+.month p { margin: 0; font-size: 13.5px; color: var(--muted) }
+.bar { height: 6px; background: var(--sunken); border-radius: 3px; overflow: hidden }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width .3s }
+
+.section-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px }
+.weeks { display: grid; gap: 10px }
+details.week { background: var(--surface); border: 1px solid var(--line); border-radius: 10px }
+details.week.cur { border-color: var(--accent) }
+details.week > summary { list-style: none; cursor: pointer; padding: 12px 16px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center }
+details.week > summary::-webkit-details-marker { display: none }
+details.week > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 10px }
+.wnum { font-family: var(--f-display); font-weight: 700; font-size: 22px; width: 44px; color: var(--muted) }
+.cur .wnum { color: var(--accent) }
+.wtitle { min-width: 0 }
+.wtitle b { font-weight: 600; display: block; overflow-wrap: anywhere }
+.wtitle span { font-size: 13px; color: var(--muted) }
+.wprog { display: flex; align-items: center; gap: 10px; font-family: var(--f-mono); font-size: 13px; font-variant-numeric: tabular-nums }
+.wprog .bar { width: 70px }
+.chip { font-family: var(--f-mono); font-size: 11px; padding: 2px 7px; border-radius: 999px; background: var(--sunken); color: var(--muted); white-space: nowrap }
+.chip.now { background: var(--accent-soft); color: var(--accent) }
+.chip.done { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good) }
+.chip.late { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad) }
+@media (max-width: 560px) { .wprog .bar { display: none } details.week > summary { gap: 10px } }
+
+.wbody { padding: 4px 16px 16px; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px; border-top: 1px solid var(--line) }
+@media (max-width: 720px) { .wbody { grid-template-columns: minmax(0, 1fr) } }
+.items { display: grid; gap: 2px; padding-top: 10px }
+.item { display: grid; grid-template-columns: 20px 64px minmax(0, 1fr); gap: 10px; align-items: start; padding: 6px 4px; border-radius: 6px; cursor: pointer }
+.item:hover { background: var(--sunken) }
+.item input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--accent); cursor: pointer }
+.item .cat { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding-top: 2px }
+.item.done .txt { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line) }
+.c-read { color: var(--read) } .c-build { color: var(--build) } .c-design { color: var(--design) } .c-code { color: var(--code) } .c-career { color: var(--career) }
+.side { display: grid; gap: 14px; align-content: start; padding-top: 12px }
+.lc { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--sunken); border-radius: 8px; padding: 8px 10px }
+.lc label { font-size: 13px; color: var(--muted) }
+.stepper { display: flex; align-items: center; gap: 4px }
+.stepper button { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: 600 16px var(--f-mono); cursor: pointer }
+.stepper button:hover { border-color: var(--accent); color: var(--accent) }
+.stepper button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px }
+.stepper output { min-width: 34px; text-align: center; font: 500 16px var(--f-mono) }
+.notes { display: grid; gap: 4px }
+.notes label { font-size: 13px; color: var(--muted) }
+textarea { width: 100%; min-height: 84px; resize: vertical; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--fg); font: 13.5px/1.45 var(--f-body); padding: 8px 10px }
+
+.bottom { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px }
+@media (max-width: 720px) { .bottom { grid-template-columns: minmax(0, 1fr) } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; align-content: start }
+.panel .items { padding-top: 0 }
+.panel .item { grid-template-columns: 20px minmax(0, 1fr) }
+.cp-date { font-family: var(--f-mono); font-size: 12px; color: var(--muted); display: block }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 13px; max-width: calc(100% - 32px) }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Perception / SLAM interview prep · Oct 8 2026 → Jan 30 2027</span>
+    <div class="headrow">
+      <h1>SLAM Prep Tracker</h1>
+      <span class="status" id="status"><span id="statusText">Saved in this browser</span>
+        <button type="button" class="tbtn" id="exportBtn">Export</button>
+        <label class="tbtn" for="importFile">Import</label><input type="file" id="importFile" accept="application/json,.json" hidden></span>
+    </div>
+    <p class="now" id="now"></p>
+  </header>
+
+  <section class="stats" aria-label="Summary">
+    <div class="stat"><span class="v" id="sOverall">0%</span><span class="l">Plan complete · <span id="sItems"></span></span><span class="pace" id="sPace"></span></div>
+    <div class="stat"><span class="v" id="sMocks">0<small>/10</small></span><span class="l">Full mocks (goal 10+)</span></div>
+    <div class="stat"><span class="v" id="sStories">0<small>/7</small></span><span class="l">STAR stories</span></div>
+    <div class="stat"><span class="v" id="sLC">0</span><span class="l">LeetCode problems</span></div>
+    <div class="stat"><span class="v" id="sCP">0<small>/5</small></span><span class="l">Checkpoints passed</span></div>
+  </section>
+
+  <section class="graph-card" aria-label="Timeline">
+    <div class="cap"><h2>Trajectory</h2>
+      <div class="legend"><span><span class="sw" style="background:var(--accent)"></span>week progress</span><span>◆ checkpoint</span><span>┊ today</span></div></div>
+    <div class="graph-scroll"><svg id="graph" viewBox="0 0 960 150" role="img" aria-label="Weekly progress timeline"></svg></div>
+  </section>
+
+  <section class="months" id="months" aria-label="Monthly goals"></section>
+
+  <section style="display:grid;gap:12px">
+    <div class="section-head"><h2>Weeks</h2><span class="muted" style="font-size:13px">Tick items as you finish them. Notes are for the hand-waved spots from your mocks.</span></div>
+    <div class="weeks" id="weeks"></div>
+  </section>
+
+  <section class="bottom">
+    <div class="panel"><h2>Checkpoints</h2><div class="items" id="cps"></div></div>
+    <div class="panel"><h2>Behavioral stories (STAR)</h2><div class="items" id="stories"></div></div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const D = (m, d, y = 2026) => new Date(y, m - 1, d);
+const CAT = { read: "Read", build: "Build", design: "Design", code: "Code", career: "Career" };
+
+// Revised schedule: weeks 1–5 as planned (w5 absorbs the Nov 12–13 buffer), travel Nov 14–28, then shifted two weeks.
+const WEEKS = [
+  { n: 1, s: D(10,8), e: D(10,14), t: "Least squares & QR", items: [
+    ["read","Strang: least squares, orthogonality, projections, QR"],
+    ["build","Line/plane fit via normal equations and QR, with unit tests"],
+    ["design","Learn the 7-step design framework"],
+    ["design","Read 2 perception design write-ups"],
+    ["code","Arrays, hashing, two pointers"]]},
+  { n: 2, s: D(10,15), e: D(10,21), t: "Eigen, SVD, camera models", items: [
+    ["read","Strang: eigenvalues, positive definite, Cholesky, SVD"],
+    ["read","H&Z: camera models"],
+    ["build","Same fit via Cholesky and SVD"],
+    ["build","Pinhole + distortion projection"],
+    ["design","15-min drill: 6-DoF tracking for AR glasses"],
+    ["code","Sliding window, stacks"]]},
+  { n: 3, s: D(10,22), e: D(10,28), t: "Epipolar geometry", items: [
+    ["read","H&Z: DLT + normalization, epipolar geometry, F and E"],
+    ["build","RANSAC + 8-point algorithm"],
+    ["build","Essential matrix decomposition / pose recovery, synthetic tests"],
+    ["design","15-min drills: requirements for 2 more prompts"],
+    ["code","Binary search, linked lists"]]},
+  { n: 4, s: D(10,29), e: D(11,4), t: "Two-view reconstruction", cp: "Two-view reconstruction works; derive E, F and triangulation from scratch", items: [
+    ["read","H&Z: triangulation, homography, sparse LM appendix"],
+    ["build","Two-view reconstruction on real images"],
+    ["design","30-min drill: multi-user shared AR anchors"],
+    ["code","Trees, BFS/DFS"]]},
+  { n: 5, s: D(11,5), e: D(11,13), t: "Lie groups & bundle adjustment", items: [
+    ["read","Barfoot + Solà: SO(3)/SE(3), exp/log, perturbations, Jacobians"],
+    ["build","Bundle adjustment from scratch on SE(3)"],
+    ["build","Compare BA with Ceres (accuracy + runtime)"],
+    ["design","30-min drill: city-scale relocalization"],
+    ["code","Heaps, intervals"]]},
+  { n: 6, s: D(11,29), e: D(12,5), t: "Kalman filters", cp: "BA runs and matches Ceres; first full design mock done", items: [
+    ["read","Probabilistic Robotics: Bayes filter, KF, EKF"],
+    ["build","KF/EKF on a simulated 2D robot"],
+    ["design","45-min mock (recorded): online calibration monitoring for an AV fleet", "mock"],
+    ["code","Graphs, topological sort"]]},
+  { n: 7, s: D(12,6), e: D(12,12), t: "Error-state EKF", items: [
+    ["read","Barfoot: error-state EKF, Gaussian estimation"],
+    ["build","Error-state EKF: IMU + GPS or IMU + vision"],
+    ["design","45-min mock: traffic sign tracking from a monocular camera", "mock"],
+    ["code","Backtracking"]]},
+  { n: 8, s: D(12,13), e: D(12,19), t: "IMU preintegration & VIO", items: [
+    ["read","Forster: IMU preintegration; Barfoot: factor graphs, marginalization"],
+    ["build","IMU preintegration factors; VIO on EuRoC"],
+    ["design","45-min mock: VIO for a drone", "mock"],
+    ["code","1D dynamic programming"]]},
+  { n: 9, s: D(12,20), e: D(12,26), t: "Loop closure · reading ends", cp: "VIO + loop closure on EuRoC; reading phase over; applications started", items: [
+    ["read","Probabilistic Robotics: loop closure, EKF SLAM vs GraphSLAM, occupancy grids"],
+    ["build","Simple loop closure + pose graph"],
+    ["build","Trajectory error plots vs. ground truth"],
+    ["design","45-min mock: HD map updates from fleet data", "mock"],
+    ["code","2D dynamic programming"],
+    ["career","Start applying"]]},
+  { n: 10, s: D(12,27), e: D(1,2,2027), t: "Mocks & domain drills", items: [
+    ["read","Gap-filling from mock notes"],
+    ["build","Domain drills: IoU/NMS, bilinear interpolation, ICP, KF update"],
+    ["design","Peer mock #1", "mock"],
+    ["design","Peer mock #2", "mock"],
+    ["code","Mixed, timed sets"]]},
+  { n: 11, s: D(1,3,2027), e: D(1,9,2027), t: "Repo polish & resume", items: [
+    ["read","Gap-filling + resume deep dive"],
+    ["build","Repo README: architecture diagram, results, design decisions"],
+    ["build","Rehearse the 5-minute repo walkthrough"],
+    ["design","Mock on your own resume projects", "mock"],
+    ["design","Peer mock", "mock"],
+    ["code","Mixed, timed sets"]]},
+  { n: 12, s: D(1,10,2027), e: D(1,16,2027), t: "Timed drills", cp: "6+ mocks done; resume projects defended without hand-waving", items: [
+    ["read","Gap-filling"],
+    ["build","Timed domain coding drills"],
+    ["design","Mock: phone video → 3D model service", "mock"],
+    ["design","Mock: generic backend prompt (if needed)", "mock"],
+    ["code","Company-tagged sets"]]},
+  { n: 13, s: D(1,17,2027), e: D(1,23,2027), t: "Weak spots", items: [
+    ["read","Review cheat sheets"],
+    ["design","Redo weakest prompt #1", "mock"],
+    ["design","Redo weakest prompt #2", "mock"],
+    ["code","Company-tagged sets"]]},
+  { n: 14, s: D(1,24,2027), e: D(1,30,2027), t: "Ready for onsites", cp: "Ready for onsites", items: [
+    ["read","Light review"],
+    ["design","Final mock", "mock"],
+    ["code","Light practice to stay sharp"]]},
+];
+const TRAVEL = { s: D(11,14), e: D(11,28) };
+const STORIES = ["Conflict with a teammate or another team","A failure and what you changed afterwards","Leading through ambiguity","Biggest technical impact","Disagreeing with a manager or a technical decision","Mentoring or helping someone grow","Motivation: why this role and team"];
+const MONTHS = [
+  { key: "Oct", label: "October", weeks: [1,2,3], goal: "Linear algebra, camera models, epipolar geometry. RANSAC + 8-point in the repo." },
+  { key: "Nov", label: "November", weeks: [4,5], goal: "Two-view reconstruction and BA vs. Ceres before you leave Nov 14. Travel Nov 14–28." },
+  { key: "Dec", label: "December", weeks: [6,7,8,9], goal: "Filters, error-state EKF, VIO + loop closure on EuRoC. First full mocks. Start applying." },
+  { key: "Jan", label: "January", weeks: [10,11,12,13,14], goal: "10+ mocks, polished repo, resume deep dive. Ready for onsites Jan 30." },
+];
+
+WEEKS.forEach(w => { w.items = w.items.map((it, i) => ({ id: `w${w.n}-${i+1}`, cat: it[0], text: it[1], mock: it[2] === "mock" })); if (w.cp) w.cpId = `cp-w${w.n}`; });
+const ALL = [...WEEKS.flatMap(w => w.items.map(i => i.id)), ...WEEKS.filter(w => w.cp).map(w => w.cpId), ...STORIES.map((_, i) => `bh-${i+1}`)];
+
+let state = { done: {}, lc: {}, notes: {} };
+const $ = id => document.getElementById(id);
+const fmt = d => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const today = new Date(); today.setHours(0,0,0,0);
+const isDone = id => !!state.done[id];
+const curWeek = WEEKS.find(w => today >= w.s && today <= w.e);
+const inTravel = today >= TRAVEL.s && today <= TRAVEL.e;
+
+function weekFrac(w) { const ids = w.items.map(i => i.id).concat(w.cp ? [w.cpId] : []); return { d: ids.filter(isDone).length, t: ids.length }; }
+
+/* ---------- build static DOM once ---------- */
+function itemRow(id, cat, text, extra = "") {
+  const lab = document.createElement("label"); lab.className = "item"; lab.dataset.id = id;
+  lab.innerHTML = `<input type="checkbox" id="cb-${id}">${cat ? `<span class="cat c-${cat}">${CAT[cat]}</span>` : ""}<span class="txt"></span>`;
+  lab.querySelector(".txt").textContent = text;
+  if (extra) { const s = document.createElement("span"); s.className = "cp-date"; s.textContent = extra; lab.querySelector(".txt").appendChild(s); }
+  lab.querySelector("input").addEventListener("change", e => toggle(id, e.target.checked));
+  return lab;
+}
+
+function buildWeeks() {
+  const host = $("weeks");
+  WEEKS.forEach(w => {
+    if (w.n === 6) {
+      const t = document.createElement("div"); t.className = "panel"; t.style.cssText = "border-style:dashed;background:transparent";
+      t.innerHTML = `<span class="eyebrow">Nov 14 – Nov 28</span><span class="muted">Travel. No study planned. Weeks 6–14 start again on Nov 29.</span>`;
+      host.appendChild(t);
+    }
+    const det = document.createElement("details"); det.className = "week"; det.id = `week-${w.n}`;
+    if (w === curWeek || (!curWeek && w.n === 6 && inTravel)) det.open = true;
+    if (w === curWeek) det.classList.add("cur");
+    det.innerHTML = `<summary><span class="wnum">${String(w.n).padStart(2,"0")}</span>
+      <span class="wtitle"><b></b><span>${fmt(w.s)} – ${fmt(w.e)}</span></span>
+      <span class="wprog"><span class="chip" id="chip-${w.n}"></span><span class="bar"><i id="bar-${w.n}"></i></span><span id="cnt-${w.n}"></span></span></summary>
+      <div class="wbody"><div class="items"></div><div class="side">
+        <div class="lc"><label for="lcv-${w.n}">LeetCode solved this week</label><div class="stepper">
+          <button type="button" aria-label="One fewer" data-d="-1">−</button><output id="lcv-${w.n}">0</output><button type="button" aria-label="One more" data-d="1">+</button></div></div>
+        <div class="notes"><label for="note-${w.n}">Gaps &amp; notes</label><textarea id="note-${w.n}" placeholder="Where did you hand-wave? What to revisit?"></textarea></div>
+      </div></div>`;
+    det.querySelector(".wtitle b").textContent = w.t;
+    const items = det.querySelector(".items");
+    w.items.forEach(it => items.appendChild(itemRow(it.id, it.cat, it.text)));
+    det.querySelectorAll(".stepper button").forEach(b => b.addEventListener("click", () => bumpLC(w.n, +b.dataset.d)));
+    det.querySelector("textarea").addEventListener("input", e => saveNote(w.n, e.target.value));
+    host.appendChild(det);
+  });
+  WEEKS.filter(w => w.cp).forEach(w => $("cps").appendChild(itemRow(w.cpId, null, w.cp, `End of week ${w.n} · ${fmt(w.e)}`)));
+  STORIES.forEach((s, i) => $("stories").appendChild(itemRow(`bh-${i+1}`, null, s)));
+}
+
+function buildMonths() {
+  $("months").innerHTML = MONTHS.map(m => `<div class="month" id="m-${m.key}"><div class="top"><h2>${m.label}</h2><span class="mono muted" id="mc-${m.key}"></span></div>
+    <div class="bar"><i id="mb-${m.key}"></i></div><p></p></div>`).join("");
+  MONTHS.forEach(m => { $(`m-${m.key}`).querySelector("p").textContent = m.goal; });
+  const mk = today.toLocaleDateString("en-US", { month: "short" });
+  const cur = $(`m-${mk}`); if (cur) cur.classList.add("cur");
+}
+
+/* ---------- pose-graph timeline ---------- */
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; }
+const SLOTS = [...WEEKS.slice(0,5).map(w => ({ w, s: w.s, e: w.e })), { travel: true, s: TRAVEL.s, e: TRAVEL.e }, ...WEEKS.slice(5).map(w => ({ w, s: w.s, e: w.e }))];
+const X0 = 40, STEP = (960 - 80) / (SLOTS.length - 1), CY = 64, R = 17;
+const slotX = i => X0 + i * STEP;
+
+function dateX(d) {
+  for (let i = 0; i < SLOTS.length; i++) {
+    const s = SLOTS[i], end = new Date(s.e); end.setDate(end.getDate() + 1);
+    if (d >= s.s && d < end) return slotX(i) - STEP/2 + STEP * (d - s.s) / (end - s.s);
+  }
+  return d < SLOTS[0].s ? null : null;
+}
+
+function drawGraph() {
+  const g = $("graph"); g.replaceChildren();
+  for (let i = 0; i < SLOTS.length - 1; i++) {
+    const a = SLOTS[i], b = SLOTS[i+1];
+    const passed = today > a.e;
+    el("line", { x1: slotX(i) + (a.travel ? 0 : R), y1: CY, x2: slotX(i+1) - (b.travel ? 0 : R), y2: CY,
+      stroke: passed ? "var(--accent)" : "var(--line)", "stroke-width": 2, "stroke-dasharray": (a.travel || b.travel) ? "4 5" : "none", fill: "none" }, g);
+  }
+  SLOTS.forEach((s, i) => {
+    const x = slotX(i);
+    if (s.travel) {
+      el("text", { x, y: CY + 4, "text-anchor": "middle", "font-size": 11 }, g).textContent = "travel";
+      el("text", { x, y: CY + 40, "text-anchor": "middle", "font-size": 10 }, g).textContent = "Nov 14–28";
+      return;
+    }
+    const w = s.w, { d, t } = weekFrac(w), f = t ? d / t : 0;
+    const a = el("a", { href: `#week-${w.n}`, tabindex: 0, "aria-label": `Week ${w.n}: ${d} of ${t} done` }, g);
+    a.addEventListener("click", ev => { ev.preventDefault(); const det = $(`week-${w.n}`); det.open = true; det.scrollIntoView({ behavior: "smooth", block: "start" }); });
+    const behind = today > w.e && f < 1;
+    el("circle", { class: "base", cx: x, cy: CY, r: R, fill: f === 1 ? "var(--accent)" : "var(--surface)", stroke: behind ? "var(--bad)" : "var(--line)", "stroke-width": 2 }, a);
+    if (f > 0 && f < 1) {
+      const C = 2 * Math.PI * R;
+      el("circle", { cx: x, cy: CY, r: R, fill: "none", stroke: "var(--accent)", "stroke-width": 4, "stroke-dasharray": `${C*f} ${C}`, transform: `rotate(-90 ${x} ${CY})` }, a);
+    }
+    const lbl = el("text", { x, y: CY + 4.5, "text-anchor": "middle", class: "wk" }, a); lbl.textContent = w.n;
+    if (f === 1) lbl.setAttribute("style", "fill:var(--surface)");
+    el("text", { x, y: CY + 40, "text-anchor": "middle", "font-size": 10 }, g).textContent = fmt(w.s);
+    if (w.cp) {
+      const ok = isDone(w.cpId);
+      el("path", { d: `M${x} ${CY-R-17} l6 6 l-6 6 l-6 -6 z`, fill: ok ? "var(--good)" : "var(--surface)", stroke: ok ? "var(--good)" : "var(--muted)", "stroke-width": 1.5 }, g);
+    }
+  });
+  const tx = dateX(today);
+  if (tx != null) {
+    el("line", { x1: tx, y1: 14, x2: tx, y2: 118, stroke: "var(--fg)", "stroke-width": 1, "stroke-dasharray": "2 3" }, g);
+    el("text", { x: Math.min(Math.max(tx, 24), 936), y: 136, "text-anchor": "middle", "font-size": 11, style: "fill:var(--fg)" }, g).textContent = "today";
+  }
+}
+
+/* ---------- render state ---------- */
+function render() {
+  ALL.forEach(id => { const cb = $(`cb-${id}`); if (!cb) return; cb.checked = isDone(id); cb.closest(".item").classList.toggle("done", isDone(id)); });
+  let lcTotal = 0;
+  WEEKS.forEach(w => {
+    const { d, t } = weekFrac(w);
+    $(`cnt-${w.n}`).textContent = `${d}/${t}`;
+    $(`bar-${w.n}`).style.width = `${t ? 100*d/t : 0}%`;
+    const chip = $(`chip-${w.n}`);
+    let cls = "chip", txt = "upcoming";
+    if (d === t) { cls += " done"; txt = "done"; }
+    else if (today > w.e) { cls += " late"; txt = `${t-d} left`; }
+    else if (w === curWeek) { cls += " now"; txt = "this week"; }
+    chip.className = cls; chip.textContent = txt;
+    const n = state.lc[`w${w.n}`] || 0; lcTotal += n; $(`lcv-${w.n}`).textContent = n;
+    const ta = $(`note-${w.n}`); if (document.activeElement !== ta) ta.value = state.notes[`w${w.n}`] || "";
+  });
+  const doneAll = ALL.filter(isDone).length;
+  $("sOverall").textContent = `${Math.round(100*doneAll/ALL.length)}%`;
+  $("sItems").textContent = `${doneAll}/${ALL.length} items`;
+  const mocks = WEEKS.flatMap(w => w.items).filter(i => i.mock && isDone(i.id)).length;
+  $("sMocks").innerHTML = `${mocks}<small>/10</small>`;
+  $("sStories").innerHTML = `${STORIES.filter((_, i) => isDone(`bh-${i+1}`)).length}<small>/7</small>`;
+  $("sLC").textContent = lcTotal;
+  $("sCP").innerHTML = `${WEEKS.filter(w => w.cp && isDone(w.cpId)).length}<small>/5</small>`;
+
+  const overdue = WEEKS.filter(w => today > w.e).reduce((s, w) => { const { d, t } = weekFrac(w); return s + (t - d); }, 0);
+  const pace = $("sPace");
+  pace.className = "pace " + (overdue === 0 ? "good" : overdue <= 3 ? "warn" : "bad");
+  pace.textContent = overdue === 0 ? "On pace" : `${overdue} item${overdue > 1 ? "s" : ""} from past weeks still open`;
+
+  MONTHS.forEach(m => {
+    const ws = WEEKS.filter(w => m.weeks.includes(w.n));
+    const d = ws.reduce((s, w) => s + weekFrac(w).d, 0), t = ws.reduce((s, w) => s + weekFrac(w).t, 0);
+    $(`mc-${m.key}`).textContent = `${d}/${t}`;
+    $(`mb-${m.key}`).style.width = `${t ? 100*d/t : 0}%`;
+  });
+
+  const now = $("now");
+  if (inTravel) now.innerHTML = `You're <strong>traveling</strong>. Week 6 starts Nov 29.`;
+  else if (curWeek) { const { d, t } = weekFrac(curWeek); now.innerHTML = `<strong>Week ${curWeek.n}</strong> · ${fmt(curWeek.s)} – ${fmt(curWeek.e)} · <span></span> · ${d} of ${t} done`; now.querySelector("span").textContent = curWeek.t; }
+  else if (today < WEEKS[0].s) now.textContent = "The plan starts Oct 8.";
+  else now.innerHTML = `<strong>Plan complete.</strong> Good luck in your onsites.`;
+  drawGraph();
+}
+
+/* ---------- persistence (this browser) ---------- */
+const LS = "slam-prep-tracker-v1";
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 3200); }
+function save() {
+  try { localStorage.setItem(LS, JSON.stringify(state)); }
+  catch { toast("This browser blocked saving. Use Export to keep a copy."); }
+}
+function toggle(id, on) { state.done[id] = on ? new Date().toISOString() : null; save(); render(); }
+function bumpLC(n, d) { const k = `w${n}`; state.lc[k] = Math.max(0, (state.lc[k] || 0) + d); save(); render(); }
+const noteTimers = {};
+function saveNote(n, v) { const k = `w${n}`; state.notes[k] = v; clearTimeout(noteTimers[k]); noteTimers[k] = setTimeout(save, 500); }
+function adopt(data) {
+  state = { done: { ...(data.done || {}) }, lc: { ...(data.lc || {}) }, notes: { ...(data.notes || {}) } };
+}
+
+$("exportBtn").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify({ app: "slam-prep-tracker", exported: new Date().toISOString(), ...state }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `slam-prep-progress-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast("Progress exported.");
+});
+$("importFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (!data || typeof data.done !== "object") throw new Error();
+    adopt(data); save(); render();
+    toast("Progress imported.");
+  } catch { toast("That file isn't a tracker export. Pick a file made with Export."); }
+});
+// Keep other open tabs in sync.
+window.addEventListener("storage", e => { if (e.key === LS && e.newValue) { try { adopt(JSON.parse(e.newValue)); render(); } catch {} } });
+
+buildWeeks(); buildMonths();
+try { const s = JSON.parse(localStorage.getItem(LS) || "null"); if (s) adopt(s); } catch {}
+render();
+</script>
+</body>
+</html>
