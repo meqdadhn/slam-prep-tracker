@@ -134,7 +134,7 @@ textarea { width: 100%; min-height: 84px; resize: vertical; border: 1px solid va
 <body>
 <div class="wrap">
   <header>
-    <span class="eyebrow">Perception / SLAM interview prep · Oct 8 2026 → Jan 30 2027</span>
+    <span class="eyebrow">Perception / SLAM interview prep · Oct 12 2026 → Jan 31 2027</span>
     <div class="headrow">
       <h1>SLAM Prep Tracker</h1>
       <span class="status" id="status"><span id="statusText">Saved in this browser</span>
@@ -176,96 +176,96 @@ textarea { width: 100%; min-height: 84px; resize: vertical; border: 1px solid va
 const D = (m, d, y = 2026) => new Date(y, m - 1, d);
 const CAT = { read: "Read", build: "Build", design: "Design", code: "Code", career: "Career" };
 
-// Revised schedule: weeks 1–5 as planned (w5 absorbs the Nov 12–13 buffer), travel Nov 14–28, then shifted two weeks.
+// Weeks run Monday–Sunday from Oct 12. Week 5 is weekdays only (Nov 9–13) before travel Nov 14–29; week 6 resumes Nov 30.
 const WEEKS = [
-  { n: 1, s: D(10,8), e: D(10,14), t: "Least squares & QR", items: [
+  { n: 1, s: D(10,12), e: D(10,18), t: "Least squares & QR", items: [
     ["read","Strang: least squares, orthogonality, projections, QR"],
     ["build","Line/plane fit via normal equations and QR, with unit tests"],
     ["design","Learn the 7-step design framework"],
     ["design","Read 2 perception design write-ups"],
     ["code","Arrays, hashing, two pointers"]]},
-  { n: 2, s: D(10,15), e: D(10,21), t: "Eigen, SVD, camera models", items: [
+  { n: 2, s: D(10,19), e: D(10,25), t: "Eigen, SVD, camera models", items: [
     ["read","Strang: eigenvalues, positive definite, Cholesky, SVD"],
     ["read","H&Z: camera models"],
     ["build","Same fit via Cholesky and SVD"],
     ["build","Pinhole + distortion projection"],
     ["design","15-min drill: 6-DoF tracking for AR glasses"],
     ["code","Sliding window, stacks"]]},
-  { n: 3, s: D(10,22), e: D(10,28), t: "Epipolar geometry", items: [
+  { n: 3, s: D(10,26), e: D(11,1), t: "Epipolar geometry", items: [
     ["read","H&Z: DLT + normalization, epipolar geometry, F and E"],
     ["build","RANSAC + 8-point algorithm"],
     ["build","Essential matrix decomposition / pose recovery, synthetic tests"],
     ["design","15-min drills: requirements for 2 more prompts"],
     ["code","Binary search, linked lists"]]},
-  { n: 4, s: D(10,29), e: D(11,4), t: "Two-view reconstruction", cp: "Two-view reconstruction works; derive E, F and triangulation from scratch", items: [
+  { n: 4, s: D(11,2), e: D(11,8), t: "Two-view reconstruction", cp: "Two-view reconstruction works; derive E, F and triangulation from scratch", items: [
     ["read","H&Z: triangulation, homography, sparse LM appendix"],
     ["build","Two-view reconstruction on real images"],
     ["design","30-min drill: multi-user shared AR anchors"],
     ["code","Trees, BFS/DFS"]]},
-  { n: 5, s: D(11,5), e: D(11,13), t: "Lie groups & bundle adjustment", items: [
+  { n: 5, s: D(11,9), e: D(11,13), t: "Lie groups & bundle adjustment", items: [
     ["read","Barfoot + Solà: SO(3)/SE(3), exp/log, perturbations, Jacobians"],
     ["build","Bundle adjustment from scratch on SE(3)"],
     ["build","Compare BA with Ceres (accuracy + runtime)"],
     ["design","30-min drill: city-scale relocalization"],
     ["code","Heaps, intervals"]]},
-  { n: 6, s: D(11,29), e: D(12,5), t: "Kalman filters", cp: "BA runs and matches Ceres; first full design mock done", items: [
+  { n: 6, s: D(11,30), e: D(12,6), t: "Kalman filters", cp: "BA runs and matches Ceres; first full design mock done", items: [
     ["read","Probabilistic Robotics: Bayes filter, KF, EKF"],
     ["build","KF/EKF on a simulated 2D robot"],
     ["design","45-min mock (recorded): online calibration monitoring for an AV fleet", "mock"],
     ["code","Graphs, topological sort"]]},
-  { n: 7, s: D(12,6), e: D(12,12), t: "Error-state EKF", items: [
+  { n: 7, s: D(12,7), e: D(12,13), t: "Error-state EKF", items: [
     ["read","Barfoot: error-state EKF, Gaussian estimation"],
     ["build","Error-state EKF: IMU + GPS or IMU + vision"],
     ["design","45-min mock: traffic sign tracking from a monocular camera", "mock"],
     ["code","Backtracking"]]},
-  { n: 8, s: D(12,13), e: D(12,19), t: "IMU preintegration & VIO", items: [
+  { n: 8, s: D(12,14), e: D(12,20), t: "IMU preintegration & VIO", items: [
     ["read","Forster: IMU preintegration; Barfoot: factor graphs, marginalization"],
     ["build","IMU preintegration factors; VIO on EuRoC"],
     ["design","45-min mock: VIO for a drone", "mock"],
     ["code","1D dynamic programming"]]},
-  { n: 9, s: D(12,20), e: D(12,26), t: "Loop closure · reading ends", cp: "VIO + loop closure on EuRoC; reading phase over; applications started", items: [
+  { n: 9, s: D(12,21), e: D(12,27), t: "Loop closure · reading ends", cp: "VIO + loop closure on EuRoC; reading phase over; applications started", items: [
     ["read","Probabilistic Robotics: loop closure, EKF SLAM vs GraphSLAM, occupancy grids"],
     ["build","Simple loop closure + pose graph"],
     ["build","Trajectory error plots vs. ground truth"],
     ["design","45-min mock: HD map updates from fleet data", "mock"],
     ["code","2D dynamic programming"],
     ["career","Start applying"]]},
-  { n: 10, s: D(12,27), e: D(1,2,2027), t: "Mocks & domain drills", items: [
+  { n: 10, s: D(12,28), e: D(1,3,2027), t: "Mocks & domain drills", items: [
     ["read","Gap-filling from mock notes"],
     ["build","Domain drills: IoU/NMS, bilinear interpolation, ICP, KF update"],
     ["design","Peer mock #1", "mock"],
     ["design","Peer mock #2", "mock"],
     ["code","Mixed, timed sets"]]},
-  { n: 11, s: D(1,3,2027), e: D(1,9,2027), t: "Repo polish & resume", items: [
+  { n: 11, s: D(1,4,2027), e: D(1,10,2027), t: "Repo polish & resume", items: [
     ["read","Gap-filling + resume deep dive"],
     ["build","Repo README: architecture diagram, results, design decisions"],
     ["build","Rehearse the 5-minute repo walkthrough"],
     ["design","Mock on your own resume projects", "mock"],
     ["design","Peer mock", "mock"],
     ["code","Mixed, timed sets"]]},
-  { n: 12, s: D(1,10,2027), e: D(1,16,2027), t: "Timed drills", cp: "6+ mocks done; resume projects defended without hand-waving", items: [
+  { n: 12, s: D(1,11,2027), e: D(1,17,2027), t: "Timed drills", cp: "6+ mocks done; resume projects defended without hand-waving", items: [
     ["read","Gap-filling"],
     ["build","Timed domain coding drills"],
     ["design","Mock: phone video → 3D model service", "mock"],
     ["design","Mock: generic backend prompt (if needed)", "mock"],
     ["code","Company-tagged sets"]]},
-  { n: 13, s: D(1,17,2027), e: D(1,23,2027), t: "Weak spots", items: [
+  { n: 13, s: D(1,18,2027), e: D(1,24,2027), t: "Weak spots", items: [
     ["read","Review cheat sheets"],
     ["design","Redo weakest prompt #1", "mock"],
     ["design","Redo weakest prompt #2", "mock"],
     ["code","Company-tagged sets"]]},
-  { n: 14, s: D(1,24,2027), e: D(1,30,2027), t: "Ready for onsites", cp: "Ready for onsites", items: [
+  { n: 14, s: D(1,25,2027), e: D(1,31,2027), t: "Ready for onsites", cp: "Ready for onsites", items: [
     ["read","Light review"],
     ["design","Final mock", "mock"],
     ["code","Light practice to stay sharp"]]},
 ];
-const TRAVEL = { s: D(11,14), e: D(11,28) };
+const TRAVEL = { s: D(11,14), e: D(11,29) };
 const STORIES = ["Conflict with a teammate or another team","A failure and what you changed afterwards","Leading through ambiguity","Biggest technical impact","Disagreeing with a manager or a technical decision","Mentoring or helping someone grow","Motivation: why this role and team"];
 const MONTHS = [
   { key: "Oct", label: "October", weeks: [1,2,3], goal: "Linear algebra, camera models, epipolar geometry. RANSAC + 8-point in the repo." },
-  { key: "Nov", label: "November", weeks: [4,5], goal: "Two-view reconstruction and BA vs. Ceres before you leave Nov 14. Travel Nov 14–28." },
+  { key: "Nov", label: "November", weeks: [4,5], goal: "Two-view reconstruction and BA vs. Ceres before you leave Nov 14. Travel Nov 14–29." },
   { key: "Dec", label: "December", weeks: [6,7,8,9], goal: "Filters, error-state EKF, VIO + loop closure on EuRoC. First full mocks. Start applying." },
-  { key: "Jan", label: "January", weeks: [10,11,12,13,14], goal: "10+ mocks, polished repo, resume deep dive. Ready for onsites Jan 30." },
+  { key: "Jan", label: "January", weeks: [10,11,12,13,14], goal: "10+ mocks, polished repo, resume deep dive. Ready for onsites Jan 31." },
 ];
 
 WEEKS.forEach(w => { w.items = w.items.map((it, i) => ({ id: `w${w.n}-${i+1}`, cat: it[0], text: it[1], mock: it[2] === "mock" })); if (w.cp) w.cpId = `cp-w${w.n}`; });
@@ -296,7 +296,7 @@ function buildWeeks() {
   WEEKS.forEach(w => {
     if (w.n === 6) {
       const t = document.createElement("div"); t.className = "panel"; t.style.cssText = "border-style:dashed;background:transparent";
-      t.innerHTML = `<span class="eyebrow">Nov 14 – Nov 28</span><span class="muted">Travel. No study planned. Weeks 6–14 start again on Nov 29.</span>`;
+      t.innerHTML = `<span class="eyebrow">Nov 14 – Nov 29</span><span class="muted">Travel. No study planned. Week 6 starts Monday, Nov 30.</span>`;
       host.appendChild(t);
     }
     const det = document.createElement("details"); det.className = "week"; det.id = `week-${w.n}`;
@@ -356,7 +356,7 @@ function drawGraph() {
     const x = slotX(i);
     if (s.travel) {
       el("text", { x, y: CY + 4, "text-anchor": "middle", "font-size": 11 }, g).textContent = "travel";
-      el("text", { x, y: CY + 40, "text-anchor": "middle", "font-size": 10 }, g).textContent = "Nov 14–28";
+      el("text", { x, y: CY + 40, "text-anchor": "middle", "font-size": 10 }, g).textContent = "Nov 14–29";
       return;
     }
     const w = s.w, { d, t } = weekFrac(w), f = t ? d / t : 0;
@@ -422,9 +422,9 @@ function render() {
   });
 
   const now = $("now");
-  if (inTravel) now.innerHTML = `You're <strong>traveling</strong>. Week 6 starts Nov 29.`;
+  if (inTravel) now.innerHTML = `You're <strong>traveling</strong>. Week 6 starts Monday, Nov 30.`;
   else if (curWeek) { const { d, t } = weekFrac(curWeek); now.innerHTML = `<strong>Week ${curWeek.n}</strong> · ${fmt(curWeek.s)} – ${fmt(curWeek.e)} · <span></span> · ${d} of ${t} done`; now.querySelector("span").textContent = curWeek.t; }
-  else if (today < WEEKS[0].s) now.textContent = "The plan starts Oct 8.";
+  else if (today < WEEKS[0].s) now.textContent = "Week 1 starts Monday, Oct 12. Warm up with the Strang reading if you have time.";
   else now.innerHTML = `<strong>Plan complete.</strong> Good luck in your onsites.`;
   drawGraph();
 }
